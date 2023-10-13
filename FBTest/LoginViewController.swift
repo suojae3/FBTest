@@ -2,10 +2,13 @@
 import UIKit
 import RiveRuntime
 import SnapKit
+import FirebaseAuth
 
 
 //MARK: - Properties & Deinit
 class LoginViewController: UIViewController {
+    
+    var handle: AuthStateDidChangeListenerHandle?
     
     // UI Elements
     private lazy var emailTextField: UITextField = {
@@ -63,6 +66,9 @@ class LoginViewController: UIViewController {
         return view
     }()
     
+    deinit {
+        print("메모리 해제")
+    }
     
 }
 
@@ -71,12 +77,20 @@ extension LoginViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        handle = Auth.auth().addStateDidChangeListener { (auth, user) in
+            if user != nil {
+                
+            } else {
+                
+            }
+        }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        if let handle = handle {
+            Auth.auth().removeStateDidChangeListener(handle)
+        }
         setupUI()
     }
     
@@ -84,6 +98,10 @@ extension LoginViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
+        
+        if let handle = handle {
+            Auth.auth().removeStateDidChangeListener(handle)
+        }
     }
 }
 
@@ -187,7 +205,29 @@ extension LoginViewController {
     
     @objc func loginButtonTapped() {
         
+        guard
+            let email = emailTextField.text, !email.isEmpty,
+            let password = passwordTextField.text, !password.isEmpty
+        else {
+            // Alert the user to fill in the fields.
+            return
+        }
         
+        // Firebase Auth Login
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
+            guard let strongSelf = self else { return }
+            
+            if authResult != nil {
+                print("로그인 성공")
+                
+                let successVC = SuccessVC()
+                successVC.modalPresentationStyle = .fullScreen
+                strongSelf.present(successVC, animated: true, completion: nil)
+                
+            } else {
+                print("로그인 실패")
+                print(error.debugDescription)
+            }
+        }
     }
-    
 }
