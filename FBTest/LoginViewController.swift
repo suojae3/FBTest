@@ -27,9 +27,6 @@ class LoginViewController: UIViewController {
     private lazy var loginButton: UIButton = {
         let button = UIButton()
         button.setTitle("Login", for: .normal)
-        button.backgroundColor = .blue
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 20
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -113,7 +110,7 @@ extension LoginViewController {
     
     func setupUI() {
         
-        [kakaoLoginButton, appleLoginButton].forEach {
+        [kakaoLoginButton, appleLoginButton, loginButton].forEach {
             $0.backgroundColor = .yellow
             $0.setTitleColor(.black, for: .normal)
             $0.layer.cornerRadius = 20
@@ -209,21 +206,24 @@ extension LoginViewController {
             let email = emailTextField.text, !email.isEmpty,
             let password = passwordTextField.text, !password.isEmpty
         else {
-            // Alert the user to fill in the fields.
             return
         }
         
         // Firebase Auth Login
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
-            guard let strongSelf = self else { return }
+            guard let _ = self else { return }
             
             if authResult != nil {
                 print("로그인 성공")
                 
                 let successVC = SuccessVC()
-                successVC.modalPresentationStyle = .fullScreen
-                strongSelf.present(successVC, animated: true, completion: nil)
-                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first {
+                    window.rootViewController = successVC
+                    window.makeKeyAndVisible()
+                }
+
+
             } else {
                 print("로그인 실패")
                 print(error.debugDescription)
