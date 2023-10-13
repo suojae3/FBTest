@@ -76,31 +76,26 @@ extension LoginViewController {
         super.viewWillAppear(animated)
         handle = Auth.auth().addStateDidChangeListener { (auth, user) in
             if user != nil {
-                
-            } else {
-                
+                // when a user is already logged in if needed
             }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let handle = handle {
-            Auth.auth().removeStateDidChangeListener(handle)
-        }
         setupUI()
+        addDismissKeyboardGesture()
     }
-    
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        
         if let handle = handle {
             Auth.auth().removeStateDidChangeListener(handle)
         }
     }
 }
+
+
 
 
 
@@ -139,8 +134,7 @@ extension LoginViewController {
         setupConstraints()
     }
     
-    
-    
+
     func setupConstraints() {
         riveView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -191,43 +185,62 @@ extension LoginViewController {
 
 //MARK: - Button Action
 extension LoginViewController {
+    
     @objc func kakoLoginTapped() {
-        
-        
     }
     
     @objc func appleLoginTapped() {
-        
     }
     
     @objc func loginButtonTapped() {
-        
         guard
             let email = emailTextField.text, !email.isEmpty,
             let password = passwordTextField.text, !password.isEmpty
         else {
+            showAlert(title: "Error", message: "Please fill in both fields.")
             return
         }
         
         // Firebase Auth Login
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
-            guard let _ = self else { return }
+            guard let strongSelf = self else { return }
+            
+            if let error = error {
+                print("로그인 실패: \(error.localizedDescription)")
+                strongSelf.showAlert(title: "Login Error", message: error.localizedDescription)
+                return
+            }
             
             if authResult != nil {
                 print("로그인 성공")
-                
                 let successVC = SuccessVC()
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = windowScene.windows.first {
                     window.rootViewController = successVC
                     window.makeKeyAndVisible()
                 }
-
-
-            } else {
-                print("로그인 실패")
-                print(error.debugDescription)
             }
         }
     }
 }
+
+//MARK: - Utilities
+extension LoginViewController {
+    
+    func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true)
+    }
+    
+    func addDismissKeyboardGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+    }
+}
+
+
