@@ -113,7 +113,6 @@ extension LoginViewController {
         
         [emailTextField, passwordTextField].forEach {
             $0.borderStyle = .roundedRect
-            
         }
         
         view.addSubview(riveView)
@@ -216,8 +215,13 @@ extension LoginViewController {
                 let successVC = SuccessVC()
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                    let window = windowScene.windows.first {
-                    window.rootViewController = successVC
-                    window.makeKeyAndVisible()
+                    
+                    let transition = CATransition()
+                    transition.duration = 0.3
+                    transition.type = CATransitionType.fade // choose suitable type .push, .reveal, .fade etc.
+                    transition.subtype = CATransitionSubtype.fromRight // fromLeft, fromBottom, fromTop, etc.
+                    
+                    window.setRootViewController(successVC, withTransition: transition)
                 }
             }
         }
@@ -244,3 +248,14 @@ extension LoginViewController {
 }
 
 
+extension UIWindow {
+    func setRootViewController(_ viewController: UIViewController, withTransition transition: CATransition? = nil) {
+        let newVC = viewController
+        if let transition = transition {
+            // Add the transition
+            layer.add(transition, forKey: kCATransition)
+        }
+        rootViewController = newVC
+        makeKeyAndVisible()
+    }
+}
